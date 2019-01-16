@@ -1,0 +1,19 @@
+version: '3'
+services:
+    influxdb:
+        image: influxdb
+        ports:
+        - "8086:8086"
+        volumes:
+        - "influxdb_data:/var/lib/influxdb"
+    datalake:
+        image: docker-activage.satrd.es/independentdatastorage:0.1 
+        ports:
+        - "4567:4567"
+        environment:
+          HOST_INFLUXDB: 158.42.34.3
+          PORT_INFLUXDB: 8086
+        links:
+        - influxdb
+volumes:
+  influxdb_data:

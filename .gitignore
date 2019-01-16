@@ -1,0 +1,13 @@
+# Logs
+Logs/
+
+# Maven
+target/
+
+# ---> Java
+*.class
+
+#Settings
+.settings
+
+dependency-reduced-pom.xml
