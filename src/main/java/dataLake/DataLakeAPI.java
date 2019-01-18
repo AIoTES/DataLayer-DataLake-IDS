@@ -3,10 +3,7 @@ package dataLake;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static spark.Spark.get;
 import static spark.Spark.post;
-import static spark.Spark.delete;
-
 import com.google.gson.Gson;
 
 public class DataLakeAPI {
@@ -33,7 +30,7 @@ public class DataLakeAPI {
 			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, "The data base was created successfully."));		
 		});		
 		
-		delete("/independentStorage/deleteDB", (req, res) -> {	
+		post("/independentStorage/deleteDB", (req, res) -> {	
 			LOGGER.info("deleteDB query selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			try {
@@ -55,7 +52,7 @@ public class DataLakeAPI {
 			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, "Data inserted successfully."));	
 		});
 		
-		get("/independentStorage/select", (req, res) -> {	 
+		post("/independentStorage/select", (req, res) -> {	 
 			LOGGER.info("select measurement query selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			String measurementListString;			
@@ -67,7 +64,7 @@ public class DataLakeAPI {
 			return measurementListString;
 		});		
 		
-		delete("/independentStorage/delete", (req, res) -> {																
+		post("/independentStorage/delete", (req, res) -> {																
 			LOGGER.info("delete measurement query selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			try {
