@@ -72,7 +72,7 @@ public class DataLakeAPI {
 			String table = req.queryParams("table");
 			String query = req.queryParams("query");
 			try {
-				measurementListString = apiImpl.selectMeasurement(db, table, query, url);	//qué era url?		
+				measurementListString = apiImpl.selectMeasurement(db, table, query, url);	
 			}catch(Exception ex) {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
