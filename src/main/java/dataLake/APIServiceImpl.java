@@ -1,7 +1,9 @@
 package dataLake;
 
-
+import org.joda.time.DateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.InfluxDBMapperException;
@@ -116,7 +118,8 @@ public class APIServiceImpl implements APIService{
 			String observation = jsonObj.getJSONObject("data").getJSONObject("observation").toString();			
 			
 			Point point = Point
-			        .measurement(parsedMessageBodyRequest.getTable())		
+			        .measurement(parsedMessageBodyRequest.getTable())
+			        .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)	
 			        .addField("platformId", measurement.getPlatformId())
 			        .addField("device", measurement.getDevice())
 			        .addField("observation", observation)
@@ -178,22 +181,67 @@ public class APIServiceImpl implements APIService{
 		return measurementListString;
 	}
 	
-	public void deleteMeasurement(String messageBodyRequest, String url) throws Exception{
-		Gson gson = new Gson();
-		BodyRequest parsedMessageBodyRequest;	
-		
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+	public String selectMeasurement(String db, String table, String query, String url) throws Exception{
+		BodyRequest parsedMessageBodyRequest = new BodyRequest();	
+		QueryResult queryResult;
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
+		String measurementListString = null;
 		
 		try {
-			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
-			if(!CheckDeleteMeasurementRequest(parsedMessageBodyRequest)) {
+			parsedMessageBodyRequest.setDb(db);
+			parsedMessageBodyRequest.setTable(table);
+			parsedMessageBodyRequest.setQuery(query);
+			if(!CheckSelectMeasurementRequest(parsedMessageBodyRequest)) {
 				LOGGER.error("Invalid request");
 				throw new RuntimeException("Invalid request");
 			}
 		} catch(JsonSyntaxException jsonException) {
 			LOGGER.error("Invalid request. " + jsonException.getMessage());
 			throw new Exception("Invalid request");	
+		}		
+		
+		try {		
+			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());
+			AnnotationHelper.alterAnnotationOn(IoTMeasurement.class, Measurement.class, altered);
+
+			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
+		}catch(Exception e) {
+			LOGGER.error("Error selecting measurement. " + "Query: "+ parsedMessageBodyRequest.getQuery() +". " + e.getMessage());
+			throw new Exception("Error selecting measurement");
+		}finally {
+			influxDB.close();
 		}
+		influxDB.close();
+		
+		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
+		try {
+			List<IoTMeasurement> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);
+			Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
+			measurementListString = gson2.toJson(measurementList);
+		}catch(InfluxDBMapperException influxDBException) {
+			LOGGER.error("Error mapping measurement. " + influxDBException.getMessage());
+			throw new Exception("Error mapping measurement");
+		}
+		
+		return measurementListString;
+	}
+	
+	public void deleteMeasurement(String messageBodyRequest, String url) throws Exception{
+		Gson gson = new Gson();
+		BodyRequest parsedMessageBodyRequest;
+		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
+		
+		try {
+			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
+			if (!CheckDeleteMeasurementRequest(parsedMessageBodyRequest)) {
+				LOGGER.error("Invalid request");
+				throw new RuntimeException("Invalid request");
+			}
+		}catch(JsonSyntaxException jsonException) {
+			LOGGER.error("Invalid request. " + jsonException.getMessage());
+			throw new Exception("Invalid request");	
+		}		
 		
 		try {	
 			Query queryResult = QueryBuilder.newQuery(parsedMessageBodyRequest.getQuery())
@@ -210,8 +258,64 @@ public class APIServiceImpl implements APIService{
 		influxDB.close();
 	}
 	
-	public void updateMeasurement(IoTMeasurement measurement, String url) {
+	public void updateMeasurement(String messageBodyRequest, String url) throws Exception{	
+		BodyRequestWithTime parsedMessageBodyRequest;
+		QueryResult queryResult;				
+		String observation = null;
+		Gson gson = new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .setPrettyPrinting()
+                .serializeNulls()	
+                .create();
+		JSONObject jsonObjObservation;
+		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
+		List<IoTMeasurementWithTime> measurementList;
 		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		
+		try {	
+			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequestWithTime.class);
+			if (!CheckUpdateMeasurementRequest(parsedMessageBodyRequest)) {
+				LOGGER.error("Invalid request");
+				throw new RuntimeException("Invalid request");
+			}		
+			
+			IoTMeasurementWithTime dataToUpdate = parsedMessageBodyRequest.getData();
+			
+			jsonObjObservation = new JSONObject(messageBodyRequest);			
+			if (jsonObjObservation.getJSONObject("data").toString().contains("\"observation\":")) {
+				observation = jsonObjObservation.getJSONObject("data").getJSONObject("observation").toString();		//si se ha introducido observacion
+			}					
+					
+			//el siguiente bloque puede ser un metodo a parte. 
+			//dada la peticion, se transforma al tipo 
+			//Input: BodyRequestWithTime parsedMessageBodyRequest. Output: List<IoTMeasurementWithTime> measurementList
+			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());	//hace query sobre influxDB, cogiendo el nombre del TAG
+			AnnotationHelper.alterAnnotationOn(IoTMeasurementWithTime.class, Measurement.class, altered);
+			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));
+			measurementList = resultMapper.toPOJO(queryResult, IoTMeasurementWithTime.class);	//A partir de la query, crea una lista de IoTMeasurements (platformId, device, observation)					
+			
+			for (IoTMeasurementWithTime measurement : measurementList) { 	
+				DateTime time = new DateTime(measurement.getTime());
+				
+				Point point = Point
+				        .measurement(parsedMessageBodyRequest.getTable())	
+				        .time(time.getMillis(), TimeUnit.MILLISECONDS)	
+				        .addField("platformId", (dataToUpdate.getPlatformId() != null) ? dataToUpdate.getPlatformId() : measurement.getPlatformId())
+				        .addField("device", (dataToUpdate.getDevice() != null) ? dataToUpdate.getDevice() : measurement.getDevice())
+				        .addField("observation", (observation != null) ? observation : measurement.getObservation())	
+				.build();    	
+				influxDB.setDatabase(parsedMessageBodyRequest.getDb());
+				influxDB.write(point);	
+			}
+			
+			influxDB.close();			
+			}catch(Exception e) {
+				LOGGER.error("Error updating measurement. " + e.getMessage());
+				throw new Exception("Error updating measurement");
+			}finally {
+				influxDB.close();
+			}		
 	}	
 	
 	private boolean getParam(String query, String keyWord) {
@@ -260,6 +364,30 @@ public class APIServiceImpl implements APIService{
 		
 		return true;			
 	}	
+	
+	private boolean CheckUpdateMeasurementRequest(BodyRequestWithTime request) {
+		if(request.getDb() == null || request.getDb().trim().isEmpty()){
+			LOGGER.error("The field \"db\" is null or empty ");
+			return false;
+		}
+		
+		if(request.getTable() == null || request.getTable().trim().isEmpty()){
+			LOGGER.error("The field \"table\" is null or empty ");
+			return false;
+		}
+		
+		if(request.getQuery() == null || request.getQuery().trim().isEmpty()){
+			LOGGER.error("The field \"query\" is null or empty ");
+			return false;
+		}
+		
+		if(request.getData() == null){
+			LOGGER.error("The field \"data\" is null ");
+			return false;
+		}
+		
+		return true;			
+	}
 	
 	private boolean CheckSelectMeasurementRequest(BodyRequest request) {		
 		if(request.getDb() == null || request.getDb().trim().isEmpty()){

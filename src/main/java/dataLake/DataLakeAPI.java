@@ -3,7 +3,7 @@ package dataLake;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static spark.Spark.post;
+import static spark.Spark.*;
 import com.google.gson.Gson;
 
 public class DataLakeAPI {
@@ -26,8 +26,8 @@ public class DataLakeAPI {
 				apiImpl.createDB(req.body(), url);
 			}catch(Exception ex) {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
-			}
-			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, "The data base was created successfully."));		
+			}			
+			return new Gson().toJson(new StandardResponse("The data base was created successfully."));	
 		});		
 		
 		post("/independentStorage/deleteDB", (req, res) -> {	
@@ -38,7 +38,7 @@ public class DataLakeAPI {
 			}catch(Exception ex) {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
-			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, "The database was deleted successfully."));
+			return new Gson().toJson(new StandardResponse("The database was deleted successfully."));
 		});
 		
 		post("/independentStorage/insert", (req, res) -> {	
@@ -49,7 +49,7 @@ public class DataLakeAPI {
 			}catch(Exception ex) {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
-			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS, "Data inserted successfully."));	
+			return new Gson().toJson(new StandardResponse("Data inserted successfully."));
 		});
 		
 		post("/independentStorage/select", (req, res) -> {	 
@@ -58,6 +58,21 @@ public class DataLakeAPI {
 			String measurementListString;			
 			try {
 				measurementListString = apiImpl.selectMeasurement(req.body(), url);			
+			}catch(Exception ex) {
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}
+			return measurementListString;
+		});		
+		
+		get("/independentStorage/select", (req, res) -> {	
+			LOGGER.info("select measurement query selected");
+			APIServiceImpl apiImpl = new APIServiceImpl(); 
+			String measurementListString;			
+			String db = req.queryParams("db");
+			String table = req.queryParams("table");
+			String query = req.queryParams("query");
+			try {
+				measurementListString = apiImpl.selectMeasurement(db, table, query, url);	//qué era url?		
 			}catch(Exception ex) {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
@@ -75,8 +90,15 @@ public class DataLakeAPI {
 			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS));
 		});
 		
-		post("/independentStorage/update", (req, res) -> {	//TODO: 		
-			return new Gson().toJson(new StandardResponse(StatusResponse.ERROR));		
+		post("/independentStorage/update", (req, res) -> {		
+			LOGGER.info("update measurement query selected");
+			APIServiceImpl apiImpl = new APIServiceImpl(); 
+			try {
+				apiImpl.updateMeasurement(req.body(), url);	
+			}catch(Exception ex) {
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}
+			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS));		
 		});		
 				
 	}

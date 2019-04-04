@@ -2,15 +2,16 @@ package dataLake;
 
 import com.google.gson.annotations.Expose;
 
-public class BodyRequest {
+public class BodyRequestWithTime {
 	@Expose
 	private String db;
 	@Expose
 	private String table;	//measurement
 	@Expose
-	private IoTMeasurement data;
+	private IoTMeasurementWithTime data;
 	@Expose
 	private String query;
+	
 	
 	public String getDb() {
 		return db;
@@ -18,11 +19,11 @@ public class BodyRequest {
 	public void setDb(String db) {
 		this.db = db;
 	}
-	public IoTMeasurement getData() {	
+	public IoTMeasurementWithTime getData() {	
 		return data;
 	}
 	
-	public void setData(IoTMeasurement data) {
+	public void setData(IoTMeasurementWithTime data) {
 		this.data = data;
 	}
 	
@@ -38,5 +39,4 @@ public class BodyRequest {
 	public void setTable(String table) {
 		this.table = table;
 	}
-	
 }
