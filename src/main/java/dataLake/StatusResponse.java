@@ -10,7 +10,7 @@ public enum StatusResponse {
         this.status = status;
     }
 
-    public String getStatus() {
+	public String getStatus() {
         return status;
     }
 }

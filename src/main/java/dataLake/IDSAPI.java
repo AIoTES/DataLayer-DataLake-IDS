@@ -6,9 +6,9 @@ import org.apache.logging.log4j.Logger;
 import static spark.Spark.*;
 import com.google.gson.Gson;
 
-public class DataLakeAPI {
+public class IDSAPI {
 	
-	private static final Logger LOGGER = LogManager.getLogger(DataLakeAPI.class);	
+	private static final Logger LOGGER = LogManager.getLogger(IDSAPI.class);	
 	static String localhost;
 	static String port;
 	static String url;
@@ -72,7 +72,7 @@ public class DataLakeAPI {
 			String table = req.queryParams("table");
 			String query = req.queryParams("query");
 			try {
-				measurementListString = apiImpl.selectMeasurement(db, table, query, url);	
+				measurementListString = apiImpl.selectMeasurement(db, table, query, url);		
 			}catch(Exception ex) {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}

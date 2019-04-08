@@ -7,6 +7,9 @@ import com.google.gson.annotations.Expose;
 
 @Measurement(name = "meas")		
 public class IoTMeasurement {
+	@Column(name = "time")
+	@Expose
+	private String time;
 	@Column(name = "platformId")
 	@Expose
 	private String platformId;
@@ -20,12 +23,20 @@ public class IoTMeasurement {
 	public IoTMeasurement() {
     }
 	
-    public IoTMeasurement(String platformId, String device, String observation) {
+    public IoTMeasurement(String time, String platformId, String device, String observation) {
+    	this.time = time;
     	this.platformId = platformId;
         this.device = device;
         this.observation = observation;
     }
     
+    public String getTime() {
+		return time;
+	}
+
+	public void setTime(String time) {
+		this.time = time;
+	}
     
 	public String getPlatformId() {
 		return platformId;

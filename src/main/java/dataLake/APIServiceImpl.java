@@ -26,7 +26,7 @@ import org.json.*;
 
 public class APIServiceImpl implements APIService{
 	
-	private static final Logger LOGGER = LogManager.getLogger(DataLakeAPI.class);
+	private static final Logger LOGGER = LogManager.getLogger(IDSAPI.class);
 	
 	public void createDB(String MessageBodyRequest, String url) throws Exception {
 		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
@@ -259,7 +259,7 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public void updateMeasurement(String messageBodyRequest, String url) throws Exception{	
-		BodyRequestWithTime parsedMessageBodyRequest;
+		BodyRequest parsedMessageBodyRequest;
 		QueryResult queryResult;				
 		String observation = null;
 		Gson gson = new GsonBuilder()
@@ -269,33 +269,30 @@ public class APIServiceImpl implements APIService{
                 .create();
 		JSONObject jsonObjObservation;
 		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
-		List<IoTMeasurementWithTime> measurementList;
+		List<IoTMeasurement> measurementList;
 		
 		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
 		
 		try {	
-			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequestWithTime.class);
+			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
 			if (!CheckUpdateMeasurementRequest(parsedMessageBodyRequest)) {
 				LOGGER.error("Invalid request");
 				throw new RuntimeException("Invalid request");
 			}		
 			
-			IoTMeasurementWithTime dataToUpdate = parsedMessageBodyRequest.getData();
+			IoTMeasurement dataToUpdate = parsedMessageBodyRequest.getData();
 			
 			jsonObjObservation = new JSONObject(messageBodyRequest);			
 			if (jsonObjObservation.getJSONObject("data").toString().contains("\"observation\":")) {
-				observation = jsonObjObservation.getJSONObject("data").getJSONObject("observation").toString();		//si se ha introducido observacion
+				observation = jsonObjObservation.getJSONObject("data").getJSONObject("observation").toString();	
 			}					
 					
-			//el siguiente bloque puede ser un metodo a parte. 
-			//dada la peticion, se transforma al tipo 
-			//Input: BodyRequestWithTime parsedMessageBodyRequest. Output: List<IoTMeasurementWithTime> measurementList
-			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());	//hace query sobre influxDB, cogiendo el nombre del TAG
-			AnnotationHelper.alterAnnotationOn(IoTMeasurementWithTime.class, Measurement.class, altered);
+			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());	
+			AnnotationHelper.alterAnnotationOn(IoTMeasurement.class, Measurement.class, altered);
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));
-			measurementList = resultMapper.toPOJO(queryResult, IoTMeasurementWithTime.class);	//A partir de la query, crea una lista de IoTMeasurements (platformId, device, observation)					
+			measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);				
 			
-			for (IoTMeasurementWithTime measurement : measurementList) { 	
+			for (IoTMeasurement measurement : measurementList) { 	
 				DateTime time = new DateTime(measurement.getTime());
 				
 				Point point = Point
@@ -352,12 +349,12 @@ public class APIServiceImpl implements APIService{
 			return false;
 		}
 		
-		if(request.getData().getDevice() == null || request.getData().getPlatformId() == null){	//request.getData().getObservation() == null
+		if(request.getData().getDevice() == null || request.getData().getPlatformId() == null){	
 			LOGGER.error("At least one of the \"data\" subfields is null");
 			return false;
 		}	
 		
-		if(request.getData().getDevice().trim().isEmpty() || request.getData().getPlatformId().trim().isEmpty()){ //request.getData().getObservation().trim().isEmpty() 
+		if(request.getData().getDevice().trim().isEmpty() || request.getData().getPlatformId().trim().isEmpty()){  
 			LOGGER.error("At least one of the \"data\" subfields is empty");
 			return false;
 		}	
@@ -365,7 +362,7 @@ public class APIServiceImpl implements APIService{
 		return true;			
 	}	
 	
-	private boolean CheckUpdateMeasurementRequest(BodyRequestWithTime request) {
+	private boolean CheckUpdateMeasurementRequest(BodyRequest request) {
 		if(request.getDb() == null || request.getDb().trim().isEmpty()){
 			LOGGER.error("The field \"db\" is null or empty ");
 			return false;
