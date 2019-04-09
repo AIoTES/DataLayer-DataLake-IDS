@@ -1,28 +1,25 @@
 package dataLake;
 
-import org.joda.time.DateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.influxdb.BatchOptions;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
-import org.influxdb.InfluxDBMapperException;
+import org.influxdb.annotation.Measurement;
+import org.influxdb.dto.BoundParameterQuery.QueryBuilder;
 import org.influxdb.dto.Point;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
-import org.influxdb.dto.BoundParameterQuery.QueryBuilder;
 import org.influxdb.impl.InfluxDBResultMapper;
-import org.influxdb.annotation.Measurement;
-import org.influxdb.BatchOptions;
+import org.joda.time.DateTime;
+import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import org.json.*;
+import dataLake.CheckFields;
 
 public class APIServiceImpl implements APIService{
 	
@@ -36,26 +33,15 @@ public class APIServiceImpl implements APIService{
 		BodyRequest parsedMessageBodyRequest;
 		
 		try {
-			parsedMessageBodyRequest = gson.fromJson(MessageBodyRequest, BodyRequest.class);
-			
-			if (!CheckCreateOrDeleteDBRequest(parsedMessageBodyRequest)) {
-				LOGGER.error("Invalid request");
-				throw new RuntimeException("Invalid request");
-			}
-		}catch(JsonSyntaxException jsonException) {
-			LOGGER.error(jsonException.getMessage());
-			throw new Exception("Invalid request. " + jsonException.getMessage());	
-		} 
-		
-		try {		
+			parsedMessageBodyRequest = gson.fromJson(MessageBodyRequest, BodyRequest.class);	
+			CheckFields.CheckFieldDb(parsedMessageBodyRequest);
 			influxDB.query(new Query("CREATE DATABASE "+ parsedMessageBodyRequest.getDb(), ""));
-		} catch(Exception e) {
-			LOGGER.error("Error creating database. " + e.getMessage());
-			throw new Exception("Error creating database");	
-		} finally {
+		}catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());	
+		}finally {
 			influxDB.close();
 		}
-		influxDB.close();
 	}
 	
 	public void deleteDB(String messageBodyRequest, String url) throws Exception{
@@ -66,26 +52,15 @@ public class APIServiceImpl implements APIService{
 		BodyRequest parsedMessageBodyRequest;	
 		
 		try {
-			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
-			
-			if (!CheckCreateOrDeleteDBRequest(parsedMessageBodyRequest)) {
-				LOGGER.error("Invalid request");
-				throw new RuntimeException("Invalid request");
-			}
-		}catch(JsonSyntaxException jsonException) {
-			LOGGER.error("Invalid request. " + jsonException.getMessage());
-			throw new Exception("Invalid request");	
-		}
-		
-		try {		
+			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);			
+			CheckFields.CheckFieldDb(parsedMessageBodyRequest);
 			influxDB.query(new Query("DROP DATABASE "+ parsedMessageBodyRequest.getDb(), parsedMessageBodyRequest.getDb()));
-		} catch(Exception e) {
-			LOGGER.error("Error deleting database. " + e.getMessage());
-			throw new Exception("Error deleting database");	
-		} finally {
+		}catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());	
+		}finally {
 			influxDB.close();
 		}
-		influxDB.close();
 	}
 	
 	public void insertMeasurement(String messageBodyRequest, String url) throws Exception{		
@@ -102,16 +77,7 @@ public class APIServiceImpl implements APIService{
 		
 		try {
 			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
-			if (!CheckInsertMeasurementRequest(parsedMessageBodyRequest)) {
-				LOGGER.error("Invalid request");
-				throw new RuntimeException("Invalid request");
-			}
-		}catch(JsonSyntaxException jsonException) {
-			LOGGER.error("Invalid request. " + jsonException.getMessage());
-			throw new Exception("Invalid request");	
-		}		
-		
-		try {				
+			CheckFields.CheckInsertMeasurementRequest(parsedMessageBodyRequest);
 			IoTMeasurement measurement = parsedMessageBodyRequest.getData();
 			
 			jsonObj = new JSONObject(messageBodyRequest);			
@@ -123,59 +89,45 @@ public class APIServiceImpl implements APIService{
 			        .addField("platformId", measurement.getPlatformId())
 			        .addField("device", measurement.getDevice())
 			        .addField("observation", observation)
-			.build();
+			        .build();
 			
 			influxDB.setDatabase(parsedMessageBodyRequest.getDb());
 			influxDB.write(point);	
-		}catch(Exception e) {
-			LOGGER.error("Error inserting measurement. " + e.getMessage());
-			throw new Exception("Error inserting measurement");	
+		}catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());	
 		}finally {
 			influxDB.close();
 		}
-		influxDB.close();
 	}
 	
 	public String selectMeasurement(String messageBodyRequest, String url) throws Exception{
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
 		Gson gson = new Gson();
 		BodyRequest parsedMessageBodyRequest;	
 		QueryResult queryResult;
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
 		String measurementListString = null;
 		
 		try {
-			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);	
+			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);			
+			CheckFields.CheckSelectMeasurementRequest(parsedMessageBodyRequest);
 			
-			if(!CheckSelectMeasurementRequest(parsedMessageBodyRequest)) {
-				LOGGER.error("Invalid request");
-				throw new RuntimeException("Invalid request");
-			}
-		} catch(JsonSyntaxException jsonException) {
-			LOGGER.error("Invalid request. " + jsonException.getMessage());
-			throw new Exception("Invalid request");	
-		}		
-		
-		try {		
 			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());
 			AnnotationHelper.alterAnnotationOn(IoTMeasurement.class, Measurement.class, altered);
 
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
-		}catch(Exception e) {
-			LOGGER.error("Error selecting measurement. " + "Query: "+ parsedMessageBodyRequest.getQuery() +". " + e.getMessage());
-			throw new Exception("Error selecting measurement");
-		}finally {
-			influxDB.close();
-		}
-		influxDB.close();
-		
-		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
-		try {
+			
+			InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
 			List<IoTMeasurement> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);
 			Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
 			measurementListString = gson2.toJson(measurementList);
-		}catch(InfluxDBMapperException influxDBException) {
-			LOGGER.error("Error mapping measurement. " + influxDBException.getMessage());
-			throw new Exception("Error mapping measurement");
+		} catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());	
+		}finally {
+			influxDB.close();
 		}
 		
 		return measurementListString;
@@ -191,74 +143,54 @@ public class APIServiceImpl implements APIService{
 			parsedMessageBodyRequest.setDb(db);
 			parsedMessageBodyRequest.setTable(table);
 			parsedMessageBodyRequest.setQuery(query);
-			if(!CheckSelectMeasurementRequest(parsedMessageBodyRequest)) {
-				LOGGER.error("Invalid request");
-				throw new RuntimeException("Invalid request");
-			}
-		} catch(JsonSyntaxException jsonException) {
-			LOGGER.error("Invalid request. " + jsonException.getMessage());
-			throw new Exception("Invalid request");	
-		}		
-		
-		try {		
+			CheckFields.CheckSelectMeasurementRequest(parsedMessageBodyRequest);
+			
 			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());
 			AnnotationHelper.alterAnnotationOn(IoTMeasurement.class, Measurement.class, altered);
 
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
-		}catch(Exception e) {
-			LOGGER.error("Error selecting measurement. " + "Query: "+ parsedMessageBodyRequest.getQuery() +". " + e.getMessage());
-			throw new Exception("Error selecting measurement");
-		}finally {
-			influxDB.close();
-		}
-		influxDB.close();
-		
-		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
-		try {
+			
+			InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
 			List<IoTMeasurement> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);
 			Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
 			measurementListString = gson2.toJson(measurementList);
-		}catch(InfluxDBMapperException influxDBException) {
-			LOGGER.error("Error mapping measurement. " + influxDBException.getMessage());
-			throw new Exception("Error mapping measurement");
-		}
-		
-		return measurementListString;
-	}
-	
-	public void deleteMeasurement(String messageBodyRequest, String url) throws Exception{
-		Gson gson = new Gson();
-		BodyRequest parsedMessageBodyRequest;
-		
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
-		
-		try {
-			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
-			if (!CheckDeleteMeasurementRequest(parsedMessageBodyRequest)) {
-				LOGGER.error("Invalid request");
-				throw new RuntimeException("Invalid request");
-			}
-		}catch(JsonSyntaxException jsonException) {
-			LOGGER.error("Invalid request. " + jsonException.getMessage());
-			throw new Exception("Invalid request");	
-		}		
-		
-		try {	
-			Query queryResult = QueryBuilder.newQuery(parsedMessageBodyRequest.getQuery())
-			        .forDatabase(parsedMessageBodyRequest.getDb())
-			.create();
-			
-			influxDB.query(queryResult);
-		} catch(Exception e) {
-			LOGGER.error("Error deleting measurement. " + "Query: "+ parsedMessageBodyRequest.getQuery() +". " + e.getMessage());
-			throw new Exception("error deleting measurement");		
+		} catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());	
 		}finally {
 			influxDB.close();
 		}
-		influxDB.close();
+		
+		return measurementListString;		
+	}
+	
+	public void deleteMeasurement(String messageBodyRequest, String url) throws Exception{
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
+		Gson gson = new Gson();
+		BodyRequest parsedMessageBodyRequest;
+		
+		try {
+			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
+			CheckFields.CheckDeleteMeasurementRequest(parsedMessageBodyRequest);
+
+			Query queryResult = QueryBuilder.newQuery(parsedMessageBodyRequest.getQuery())
+			        .forDatabase(parsedMessageBodyRequest.getDb())
+			        .create();			
+			influxDB.query(queryResult);
+		}catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());	
+		}finally {
+			influxDB.close();
+		}
 	}
 	
 	public void updateMeasurement(String messageBodyRequest, String url) throws Exception{	
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
 		BodyRequest parsedMessageBodyRequest;
 		QueryResult queryResult;				
 		String observation = null;
@@ -270,15 +202,10 @@ public class APIServiceImpl implements APIService{
 		JSONObject jsonObjObservation;
 		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
 		List<IoTMeasurement> measurementList;
-		
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
-		
+				
 		try {	
 			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
-			if (!CheckUpdateMeasurementRequest(parsedMessageBodyRequest)) {
-				LOGGER.error("Invalid request");
-				throw new RuntimeException("Invalid request");
-			}		
+			CheckFields.CheckUpdateMeasurementRequest(parsedMessageBodyRequest);	
 			
 			IoTMeasurement dataToUpdate = parsedMessageBodyRequest.getData();
 			
@@ -305,134 +232,12 @@ public class APIServiceImpl implements APIService{
 				influxDB.setDatabase(parsedMessageBodyRequest.getDb());
 				influxDB.write(point);	
 			}
-			
-			influxDB.close();			
-			}catch(Exception e) {
-				LOGGER.error("Error updating measurement. " + e.getMessage());
-				throw new Exception("Error updating measurement");
+					
+			}catch(Exception ex) {
+				LOGGER.error(ex.getMessage());
+				throw new Exception(ex.getMessage());
 			}finally {
 				influxDB.close();
 			}		
-	}	
-	
-	private boolean getParam(String query, String keyWord) {
-		String[] array = query.split(" ");
-
-		if (array[0].equals(keyWord.toUpperCase())  || array[0].equals(keyWord.toLowerCase())) {
-			return true;	
-		}
-		return false;		
-	}	
-	
-	private boolean CheckCreateOrDeleteDBRequest(BodyRequest request) {
-		if (request.getDb() == null && request.getDb().trim().isEmpty()) {
-			LOGGER.error("The field \"db\" is null or empty ");
-			return false;
-		}
-		
-		return true;			
-	}	
-	
-	private boolean CheckInsertMeasurementRequest(BodyRequest request) {
-		if(request.getDb() == null || request.getDb().trim().isEmpty()){
-			LOGGER.error("The field \"db\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getTable() == null || request.getTable().trim().isEmpty()){
-			LOGGER.error("The field \"table\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getData() == null){
-			LOGGER.error("The field \"data\" is null ");
-			return false;
-		}
-		
-		if(request.getData().getDevice() == null || request.getData().getPlatformId() == null){	
-			LOGGER.error("At least one of the \"data\" subfields is null");
-			return false;
-		}	
-		
-		if(request.getData().getDevice().trim().isEmpty() || request.getData().getPlatformId().trim().isEmpty()){  
-			LOGGER.error("At least one of the \"data\" subfields is empty");
-			return false;
-		}	
-		
-		return true;			
-	}	
-	
-	private boolean CheckUpdateMeasurementRequest(BodyRequest request) {
-		if(request.getDb() == null || request.getDb().trim().isEmpty()){
-			LOGGER.error("The field \"db\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getTable() == null || request.getTable().trim().isEmpty()){
-			LOGGER.error("The field \"table\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getQuery() == null || request.getQuery().trim().isEmpty()){
-			LOGGER.error("The field \"query\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getData() == null){
-			LOGGER.error("The field \"data\" is null ");
-			return false;
-		}
-		
-		return true;			
-	}
-	
-	private boolean CheckSelectMeasurementRequest(BodyRequest request) {		
-		if(request.getDb() == null || request.getDb().trim().isEmpty()){
-			LOGGER.error("The field \"db\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getTable() == null || request.getTable().trim().isEmpty()){
-			LOGGER.error("The field \"table\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getQuery() == null || request.getQuery().trim().isEmpty()){
-			LOGGER.error("The field \"query\" is null or empty ");
-			return false;
-		}
-		
-		if (!getParam(request.getQuery(), "SELECT")) {
-			LOGGER.error("\"SELECT\" is not included in the query");
-			return false;
-		}
-		
-		return true;			
-	}	
-	
-	private boolean CheckDeleteMeasurementRequest(BodyRequest request) {		
-		if(request.getDb() == null || request.getDb().trim().isEmpty()){
-			LOGGER.error("The field \"db\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getTable() == null || request.getTable().trim().isEmpty()){
-			LOGGER.error("The field \"table\" is null or empty ");
-			return false;
-		}
-		
-		if(request.getQuery() == null || request.getQuery().trim().isEmpty()){
-			LOGGER.error("The field \"query\" is null or empty ");
-			return false;
-		}
-		
-		
-		if (!getParam(request.getQuery(), "DELETE")) {
-			LOGGER.error("\"DELETE\" is not included in the query");
-			return false;
-		}
-		
-		return true;			
-	}	
-	
+	}		
 }
