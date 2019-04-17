@@ -1,5 +1,6 @@
 package dataLake;
 
+import java.net.ConnectException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -8,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.influxdb.BatchOptions;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
+import org.influxdb.InfluxDBIOException;
 import org.influxdb.annotation.Measurement;
 import org.influxdb.dto.BoundParameterQuery.QueryBuilder;
 import org.influxdb.dto.Point;
@@ -19,23 +21,33 @@ import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import dataLake.CheckFields;
+import com.google.gson.JsonSyntaxException;
 
 public class APIServiceImpl implements APIService{
 	
 	private static final Logger LOGGER = LogManager.getLogger(IDSAPI.class);
 	
 	public void createDB(String MessageBodyRequest, String url) throws Exception {
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
-		influxDB.enableBatch(BatchOptions.DEFAULTS);		
-		
 		Gson gson = new Gson();		
 		BodyRequest parsedMessageBodyRequest;
 		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
 		try {
+			influxDB.ping();
 			parsedMessageBodyRequest = gson.fromJson(MessageBodyRequest, BodyRequest.class);	
 			CheckFields.CheckFieldDb(parsedMessageBodyRequest);
 			influxDB.query(new Query("CREATE DATABASE "+ parsedMessageBodyRequest.getDb(), ""));
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());	
+		}catch(IllegalArgumentException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new IllegalArgumentException(ex.getMessage());	
+		}catch(JsonSyntaxException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new JsonSyntaxException(ex.getMessage());	
 		}catch(Exception ex) {
 			LOGGER.error(ex.getMessage());
 			throw new Exception(ex.getMessage());	
@@ -45,16 +57,26 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public void deleteDB(String messageBodyRequest, String url) throws Exception{
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
-		influxDB.enableBatch(BatchOptions.DEFAULTS);
-		
 		Gson gson = new Gson();
 		BodyRequest parsedMessageBodyRequest;	
 		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
 		try {
+			influxDB.ping();
 			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);			
 			CheckFields.CheckFieldDb(parsedMessageBodyRequest);
 			influxDB.query(new Query("DROP DATABASE "+ parsedMessageBodyRequest.getDb(), parsedMessageBodyRequest.getDb()));
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());	
+		}catch(IllegalArgumentException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new IllegalArgumentException(ex.getMessage());	
+		}catch(JsonSyntaxException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new JsonSyntaxException(ex.getMessage());	
 		}catch(Exception ex) {
 			LOGGER.error(ex.getMessage());
 			throw new Exception(ex.getMessage());	
@@ -64,9 +86,6 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public void insertMeasurement(String messageBodyRequest, String url) throws Exception{		
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
-		influxDB.enableBatch(BatchOptions.DEFAULTS);
-		
 		Gson gson = new GsonBuilder()
                 .excludeFieldsWithoutExposeAnnotation()
                 .setPrettyPrinting()
@@ -75,7 +94,11 @@ public class APIServiceImpl implements APIService{
 		BodyRequest parsedMessageBodyRequest;	
 		JSONObject jsonObj;
 		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
 		try {
+			influxDB.ping();		
 			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
 			CheckFields.CheckInsertMeasurementRequest(parsedMessageBodyRequest);
 			IoTMeasurement measurement = parsedMessageBodyRequest.getData();
@@ -93,6 +116,15 @@ public class APIServiceImpl implements APIService{
 			
 			influxDB.setDatabase(parsedMessageBodyRequest.getDb());
 			influxDB.write(point);	
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());	
+		}catch(IllegalArgumentException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new IllegalArgumentException(ex.getMessage());	
+		}catch(JsonSyntaxException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new JsonSyntaxException(ex.getMessage());	
 		}catch(Exception ex) {
 			LOGGER.error(ex.getMessage());
 			throw new Exception(ex.getMessage());	
@@ -102,15 +134,16 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public String selectMeasurement(String messageBodyRequest, String url) throws Exception{
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
-		influxDB.enableBatch(BatchOptions.DEFAULTS);
-		
 		Gson gson = new Gson();
 		BodyRequest parsedMessageBodyRequest;	
 		QueryResult queryResult;
 		String measurementListString = null;
 		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
 		try {
+			influxDB.ping();
 			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);			
 			CheckFields.CheckSelectMeasurementRequest(parsedMessageBodyRequest);
 			
@@ -120,9 +153,18 @@ public class APIServiceImpl implements APIService{
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
 			
 			InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
-			List<IoTMeasurement> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);
+			List<IoTMeasurementWithoutTime> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurementWithoutTime.class);
 			Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
 			measurementListString = gson2.toJson(measurementList);
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());
+		}catch(IllegalArgumentException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new IllegalArgumentException(ex.getMessage());	
+		}catch(JsonSyntaxException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new JsonSyntaxException(ex.getMessage());	
 		} catch(Exception ex) {
 			LOGGER.error(ex.getMessage());
 			throw new Exception(ex.getMessage());	
@@ -136,24 +178,32 @@ public class APIServiceImpl implements APIService{
 	public String selectMeasurement(String db, String table, String query, String url) throws Exception{
 		BodyRequest parsedMessageBodyRequest = new BodyRequest();	
 		QueryResult queryResult;
+		
 		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
 		String measurementListString = null;
 		
 		try {
+			influxDB.ping();
 			parsedMessageBodyRequest.setDb(db);
 			parsedMessageBodyRequest.setTable(table);
 			parsedMessageBodyRequest.setQuery(query);
 			CheckFields.CheckSelectMeasurementRequest(parsedMessageBodyRequest);
 			
 			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());
-			AnnotationHelper.alterAnnotationOn(IoTMeasurement.class, Measurement.class, altered);
+			AnnotationHelper.alterAnnotationOn(IoTMeasurementWithoutTime.class, Measurement.class, altered);
 
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
 			
 			InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
-			List<IoTMeasurement> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);
+			List<IoTMeasurementWithoutTime> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurementWithoutTime.class);
 			Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
 			measurementListString = gson2.toJson(measurementList);
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());	
+		}catch(IllegalArgumentException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new IllegalArgumentException(ex.getMessage());	
 		} catch(Exception ex) {
 			LOGGER.error(ex.getMessage());
 			throw new Exception(ex.getMessage());	
@@ -165,13 +215,14 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public void deleteMeasurement(String messageBodyRequest, String url) throws Exception{
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
-		influxDB.enableBatch(BatchOptions.DEFAULTS);
-		
 		Gson gson = new Gson();
 		BodyRequest parsedMessageBodyRequest;
 		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
+		
 		try {
+			influxDB.ping();
 			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
 			CheckFields.CheckDeleteMeasurementRequest(parsedMessageBodyRequest);
 
@@ -179,6 +230,15 @@ public class APIServiceImpl implements APIService{
 			        .forDatabase(parsedMessageBodyRequest.getDb())
 			        .create();			
 			influxDB.query(queryResult);
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());
+		}catch(IllegalArgumentException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new IllegalArgumentException(ex.getMessage());	
+		}catch(JsonSyntaxException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new JsonSyntaxException(ex.getMessage());	
 		}catch(Exception ex) {
 			LOGGER.error(ex.getMessage());
 			throw new Exception(ex.getMessage());	
@@ -188,9 +248,6 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public void updateMeasurement(String messageBodyRequest, String url) throws Exception{	
-		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
-		influxDB.enableBatch(BatchOptions.DEFAULTS);
-		
 		BodyRequest parsedMessageBodyRequest;
 		QueryResult queryResult;				
 		String observation = null;
@@ -202,8 +259,12 @@ public class APIServiceImpl implements APIService{
 		JSONObject jsonObjObservation;
 		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
 		List<IoTMeasurement> measurementList;
+		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);
 				
 		try {	
+			influxDB.ping();
 			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
 			CheckFields.CheckUpdateMeasurementRequest(parsedMessageBodyRequest);	
 			
@@ -232,7 +293,16 @@ public class APIServiceImpl implements APIService{
 				influxDB.setDatabase(parsedMessageBodyRequest.getDb());
 				influxDB.write(point);	
 			}
-					
+			
+			}catch(InfluxDBIOException ex) {
+				LOGGER.error(ex.getMessage());
+				throw new ConnectException(ex.getMessage());
+			}catch(IllegalArgumentException ex) {
+				LOGGER.error(ex.getMessage());
+				throw new IllegalArgumentException(ex.getMessage());	
+			}catch(JsonSyntaxException ex) {
+				LOGGER.error(ex.getMessage());
+				throw new JsonSyntaxException(ex.getMessage());	
 			}catch(Exception ex) {
 				LOGGER.error(ex.getMessage());
 				throw new Exception(ex.getMessage());

@@ -1,10 +1,16 @@
 package dataLake;
 
+import static spark.Spark.externalStaticFileLocation;
+import static spark.Spark.get;
+import static spark.Spark.post;
+
+import java.net.ConnectException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static spark.Spark.*;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 public class IDSAPI {
 	
@@ -19,12 +25,24 @@ public class IDSAPI {
 		port = System.getenv().get("PORT_INFLUXDB") == null ? "8086" : System.getenv().get("PORT_INFLUXDB");		
 		url = "http://" + localhost + ":" + port;
 		
+		externalStaticFileLocation("src/main/resources/public");
+		
 		post("/independentStorage/createDB", (req, res) -> {	
 			LOGGER.info("createDB query selected");			
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			try {
 				apiImpl.createDB(req.body(), url);
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
 			}catch(Exception ex) {
+				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}			
 			return new Gson().toJson(new StandardResponse("The data base was created successfully."));	
@@ -35,18 +53,38 @@ public class IDSAPI {
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			try {
 				apiImpl.deleteDB(req.body(), url);
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
 			}catch(Exception ex) {
+				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
-			return new Gson().toJson(new StandardResponse("The database was deleted successfully."));
+			return new Gson().toJson(new StandardResponse("The InfluxDB database was deleted successfully."));
 		});
 		
 		post("/independentStorage/insert", (req, res) -> {	
 			LOGGER.info("insert measurement query selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			try {
-				apiImpl.insertMeasurement(req.body(), url);		
+				apiImpl.insertMeasurement(req.body(), url);	
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
 			}catch(Exception ex) {
+				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			return new Gson().toJson(new StandardResponse("Data inserted successfully."));
@@ -57,8 +95,18 @@ public class IDSAPI {
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			String measurementListString;			
 			try {
-				measurementListString = apiImpl.selectMeasurement(req.body(), url);			
+				measurementListString = apiImpl.selectMeasurement(req.body(), url);		
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
 			}catch(Exception ex) {
+				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			return measurementListString;
@@ -72,8 +120,15 @@ public class IDSAPI {
 			String table = req.queryParams("table");
 			String query = req.queryParams("query");
 			try {
-				measurementListString = apiImpl.selectMeasurement(db, table, query, url);		
+				measurementListString = apiImpl.selectMeasurement(db, table, query, url);	
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}catch(Exception ex) {
+				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			return measurementListString;
@@ -84,10 +139,20 @@ public class IDSAPI {
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			try {
 				apiImpl.deleteMeasurement(req.body(), url);
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
 			}catch(Exception ex) {
+				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
-			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS));
+			return new Gson().toJson(new StandardResponse("Success"));
 		});
 		
 		post("/independentStorage/update", (req, res) -> {		
@@ -95,10 +160,20 @@ public class IDSAPI {
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
 			try {
 				apiImpl.updateMeasurement(req.body(), url);	
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
 			}catch(Exception ex) {
+				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
-			return new Gson().toJson(new StandardResponse(StatusResponse.SUCCESS));		
+			return new Gson().toJson(new StandardResponse("Success"));
 		});		
 				
 	}

@@ -1,0 +1,421 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "The Independent Data Storage is a raw data storage for IoT platforms not having their own.             You can find out more information at https://git.activageproject.eu/Data_Analytics/DL-Independent_data_storage/wiki.",
+    "version": "1.0.0",
+    "title": "Independent Data Storage",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "apiteam@swagger.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:4567",
+  "tags": [
+    {
+      "name": "Independent Data Storage"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/independentStorage/createDB": {
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "Creates a new database",
+        "description": "",
+        "operationId": "createDB",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Db"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/independentStorage/deleteDB": {
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "Deletes a new table",
+        "description": "",
+        "operationId": "deleteDB",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Db"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/independentStorage/insert": {
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "Inserts data into a database",
+        "description": "",
+        "operationId": "insertObservation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Insert"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/independentStorage/select": {
+      "get": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "Selects data from a database",
+        "description": "",
+        "operationId": "selectGet",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "db",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "table",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "Selects data from a database",
+        "description": "",
+        "operationId": "selectPost",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SelectAndDelete"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/independentStorage/delete": {
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "Delete data into a database",
+        "description": "",
+        "operationId": "delete",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/SelectAndDelete"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/independentStorage/update": {
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "Updates the data contained in a database",
+        "description": "",
+        "operationId": "update",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Update"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Db": {
+      "type": "object",
+      "properties": {
+        "db": {
+          "type": "string"
+        }
+      }
+    },
+    "DataObject": {
+      "type": "object",
+      "properties": {
+        "platformId": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        },
+        "observation": {
+          "type": "object"
+        }
+      }
+    },
+    "Data": {
+      "type": "array",
+      "xml": {
+        "name": "data",
+        "wrapped": true
+      },
+      "items": {
+        "$ref": "#/definitions/DataObject"
+      }
+    },
+    "Insert": {
+      "type": "object",
+      "required": [
+        "name",
+        "photoUrls"
+      ],
+      "properties": {
+        "db": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/Data"
+        }
+      }
+    },
+    "SelectAndDelete": {
+      "type": "object",
+      "required": [
+        "name",
+        "photoUrls"
+      ],
+      "properties": {
+        "db": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        }
+      }
+    },
+    "Update": {
+      "type": "object",
+      "required": [
+        "name",
+        "photoUrls"
+      ],
+      "properties": {
+        "db": {
+          "type": "string"
+        },
+        "table": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/DataObject"
+        }
+      }
+    },
+    "ApiResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
+}

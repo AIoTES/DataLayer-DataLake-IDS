@@ -16,96 +16,96 @@ public class CheckFields {
 		return false;		
 	}	
 	
-	public static void CheckFieldDb(BodyRequest request) throws Exception {
+	public static void CheckFieldDb(BodyRequest request) throws IllegalArgumentException {
 		if (request.getDb() == null || request.getDb().trim().isEmpty()) {
 			LOGGER.error("The field \"db\" is null or empty ");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	
 	}	
 	
-	public static void CheckFieldTable(BodyRequest request) throws Exception {
+	public static void CheckFieldTable(BodyRequest request) throws IllegalArgumentException {
 		if (request.getTable() == null || request.getTable().trim().isEmpty()) {
 			LOGGER.error("The field \"table\" is null or empty ");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	
 	}	
 	
-	public static void CheckFieldData(BodyRequest request) throws Exception {
+	public static void CheckFieldData(BodyRequest request) throws IllegalArgumentException {
 		if (request.getData() == null) {
 			LOGGER.error("The field \"data\" is null or empty ");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}
 	}	
 	
-	public static void CheckFieldDataAll(BodyRequest request) throws Exception {
+	public static void CheckFieldDataAll(BodyRequest request) throws IllegalArgumentException {
 		if (request.getData() == null) {
 			LOGGER.error("The field \"data\" is null or empty ");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}
 		
 		if(request.getData().getDevice() == null || request.getData().getPlatformId() == null){	
 			LOGGER.error("At least one of the \"data\" subfields is null");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}
 		
 		if(request.getData().getDevice().trim().isEmpty() || request.getData().getPlatformId().trim().isEmpty()){  
 			LOGGER.error("At least one of the \"data\" subfields is empty");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	
 		
 		/*if(request.getData().getObservation() == null ){  
 			LOGGER.error("The \"observation\" subfields is null");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	
 		
 		if(request.getData().getObservation().trim().isEmpty() ){  
 			LOGGER.error("The \"observation\" subfields is empty");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	*/
 	}	
 	
-	public static void CheckFieldQuery(BodyRequest request) throws Exception {
+	public static void CheckFieldQuery(BodyRequest request) throws IllegalArgumentException {
 		if (request.getQuery() == null || request.getQuery().trim().isEmpty()) {
 			LOGGER.error("The field \"query\" is null or empty ");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	
 	}	
 	
-	public static void CheckFieldQuerySelect(BodyRequest request) throws Exception {
+	public static void CheckFieldQuerySelect(BodyRequest request) throws IllegalArgumentException {
 		if (!getParam(request.getQuery(), "SELECT")) {
 			LOGGER.error("\"SELECT\" is not included in the query");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	
 	}	
 	
-	public static void CheckFieldQueryDelete(BodyRequest request) throws Exception {
+	public static void CheckFieldQueryDelete(BodyRequest request) throws IllegalArgumentException {
 		if (!getParam(request.getQuery(), "DELETE")) {
 			LOGGER.error("\"DELETE\" is not included in the query");
-			throw new Exception("Invalid request");
+			throw new IllegalArgumentException("Invalid request");
 		}	
 	}	
 	
-	public static void CheckInsertMeasurementRequest(BodyRequest request) throws Exception {
+	public static void CheckInsertMeasurementRequest(BodyRequest request) throws IllegalArgumentException {
 		CheckFieldDb(request);
 		CheckFieldTable(request);
 		CheckFieldDataAll(request);		
 	}	
 	
-	public static void CheckSelectMeasurementRequest(BodyRequest request) throws Exception {		
+	public static void CheckSelectMeasurementRequest(BodyRequest request) throws IllegalArgumentException {		
 		CheckFieldDb(request);
 		CheckFieldTable(request);
 		CheckFieldQuery(request);
 		CheckFieldQuerySelect(request);			
 	}	
 	
-	public static void CheckDeleteMeasurementRequest(BodyRequest request) throws Exception {		
+	public static void CheckDeleteMeasurementRequest(BodyRequest request) throws IllegalArgumentException {		
 		CheckFieldDb(request);
 		CheckFieldTable(request);
 		CheckFieldQuery(request);	
 		CheckFieldQueryDelete(request);
 	}	
 	
-	public static void CheckUpdateMeasurementRequest(BodyRequest request) throws Exception {
+	public static void CheckUpdateMeasurementRequest(BodyRequest request) throws IllegalArgumentException {
 		CheckFieldDb(request);		
 		CheckFieldTable(request);
 		CheckFieldQuery(request);
