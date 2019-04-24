@@ -324,7 +324,7 @@
         }
       }
     },
-    "DataObject": {
+    "Data": {
       "type": "object",
       "properties": {
         "platformId": {
@@ -336,16 +336,6 @@
         "observation": {
           "type": "object"
         }
-      }
-    },
-    "Data": {
-      "type": "array",
-      "xml": {
-        "name": "data",
-        "wrapped": true
-      },
-      "items": {
-        "$ref": "#/definitions/DataObject"
       }
     },
     "Insert": {
@@ -401,15 +391,7 @@
           "type": "string"
         },
         "data": {
-          "$ref": "#/definitions/DataObject"
-        }
-      }
-    },
-    "ApiResponse": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string"
+          "$ref": "#/definitions/Data"
         }
       }
     }

@@ -71,7 +71,7 @@
 		<configuration>
 			<archive>
 				<manifest>
-					<mainClass>dataLake.DataLakeAPI</mainClass>
+					<mainClass>dataLake.IDSAPI</mainClass>
 				</manifest>
 			</archive>
 			<descriptorRefs>
@@ -89,7 +89,7 @@
             <index>true</index>
             <manifest>
               <addClasspath>true</addClasspath>
-			  <mainClass>dataLake.DataLakeAPI</mainClass>
+			  <mainClass>dataLake.IDSAPI</mainClass>
             </manifest>
             <manifestEntries>
               <mode>development</mode>
