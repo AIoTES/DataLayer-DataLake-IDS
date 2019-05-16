@@ -148,7 +148,7 @@ public class APIServiceImpl implements APIService{
 			CheckFields.CheckSelectMeasurementRequest(parsedMessageBodyRequest);
 			
 			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());
-			AnnotationHelper.alterAnnotationOn(IoTMeasurement.class, Measurement.class, altered);
+			AnnotationHelper.alterAnnotationOn(IoTMeasurementWithoutTime.class, Measurement.class, altered);		//IoTMeasurement
 
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
 			

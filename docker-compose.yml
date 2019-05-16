@@ -11,7 +11,7 @@ services:
         ports:
         - "4567:4567"
         environment:
-          HOST_INFLUXDB: 158.42.34.3
+          HOST_INFLUXDB: 172.17.0.1
           PORT_INFLUXDB: 8086
         links:
         - influxdb
