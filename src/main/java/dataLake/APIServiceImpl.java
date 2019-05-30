@@ -1,6 +1,7 @@
 package dataLake;
 
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -17,10 +18,12 @@ import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 import org.influxdb.impl.InfluxDBResultMapper;
 import org.joda.time.DateTime;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 public class APIServiceImpl implements APIService{
@@ -105,13 +108,13 @@ public class APIServiceImpl implements APIService{
 			
 			jsonObj = new JSONObject(messageBodyRequest);			
 			String observation = jsonObj.getJSONObject("data").getJSONObject("observation").toString();			
-			
+
 			Point point = Point
 			        .measurement(parsedMessageBodyRequest.getTable())
 			        .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)	
 			        .addField("platformId", measurement.getPlatformId())
 			        .addField("device", measurement.getDevice())
-			        .addField("observation", observation)
+			        .addField("observation", observation)			
 			        .build();
 			
 			influxDB.setDatabase(parsedMessageBodyRequest.getDb());
@@ -134,7 +137,8 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public String selectMeasurement(String messageBodyRequest, String url) throws Exception{
-		Gson gson = new Gson();
+		Gson gson = new Gson();	
+		
 		BodyRequest parsedMessageBodyRequest;	
 		QueryResult queryResult;
 		String measurementListString = null;
@@ -148,14 +152,21 @@ public class APIServiceImpl implements APIService{
 			CheckFields.CheckSelectMeasurementRequest(parsedMessageBodyRequest);
 			
 			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());
-			AnnotationHelper.alterAnnotationOn(IoTMeasurementWithoutTime.class, Measurement.class, altered);		//IoTMeasurement
+			AnnotationHelper.alterAnnotationOn(IoTMeasurementWithoutTime.class, Measurement.class, altered);		
 
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
-			
+
 			InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
-			List<IoTMeasurementWithoutTime> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurementWithoutTime.class);
+			List<IoTMeasurementWithoutTime> measurementListIncorrectType = resultMapper.toPOJO(queryResult, IoTMeasurementWithoutTime.class);
+			
+			List<IoTMeasurementParsed> IoTMeasurementsParsed = new ArrayList<IoTMeasurementParsed>();		
+			for (IoTMeasurementWithoutTime measure : measurementListIncorrectType) { 	
+				JsonObject observationJson = new Gson().fromJson(measure.getObservation(), JsonObject.class);				
+				IoTMeasurementsParsed.add(new IoTMeasurementParsed(measure.getPlatformId(), measure.getDevice(), observationJson));
+			}				
 			Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
-			measurementListString = gson2.toJson(measurementList);
+			
+			measurementListString = gson2.toJson(IoTMeasurementsParsed);
 		}catch(InfluxDBIOException ex) {
 			LOGGER.error(ex.getMessage());
 			throw new ConnectException(ex.getMessage());
@@ -195,9 +206,16 @@ public class APIServiceImpl implements APIService{
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));	
 			
 			InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
-			List<IoTMeasurementWithoutTime> measurementList = resultMapper.toPOJO(queryResult, IoTMeasurementWithoutTime.class);
+			List<IoTMeasurementWithoutTime> measurementListIncorrectType = resultMapper.toPOJO(queryResult, IoTMeasurementWithoutTime.class);
+			
+			List<IoTMeasurementParsed> IoTMeasurementsParsed = new ArrayList<IoTMeasurementParsed>();		
+			for (IoTMeasurementWithoutTime measure : measurementListIncorrectType) { 	
+				JsonObject observationJson = new Gson().fromJson(measure.getObservation(), JsonObject.class);				
+				IoTMeasurementsParsed.add(new IoTMeasurementParsed(measure.getPlatformId(), measure.getDevice(), observationJson));
+			}				
 			Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
-			measurementListString = gson2.toJson(measurementList);
+			
+			measurementListString = gson2.toJson(IoTMeasurementsParsed);
 		}catch(InfluxDBIOException ex) {
 			LOGGER.error(ex.getMessage());
 			throw new ConnectException(ex.getMessage());	
@@ -310,4 +328,78 @@ public class APIServiceImpl implements APIService{
 				influxDB.close();
 			}		
 	}		
+	
+	public String showDatabases(String url) throws Exception {	
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);		
+		
+		try {
+			influxDB.ping();
+			QueryResult queryResult = influxDB.query(new Query("SHOW DATABASES", ""));		
+
+			if (queryResult.getResults().get(0).getSeries() != null) {
+				int size = queryResult.getResults().get(0).getSeries().get(0).getValues().size();
+				List<List<Object>> databases = queryResult.getResults().get(0).getSeries().get(0).getValues();		
+				
+				for (int i=0; i<size; i++) {
+					jsonArray.put(databases.get(i).get(0));
+				}			
+				
+				jsonObject.put("databases", jsonArray);
+			}
+			
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());	
+		}catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());
+		}finally {
+			influxDB.close();
+		}
+		
+		return jsonObject.toString();
+	}
+	
+	public String showTables(String messageBodyRequest, String url) throws Exception {
+		Gson gson = new Gson();
+		BodyRequest parsedMessageBodyRequest;
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonArray = new JSONArray();
+		
+		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
+		influxDB.enableBatch(BatchOptions.DEFAULTS);		
+		
+		try {
+			influxDB.ping();
+			parsedMessageBodyRequest = gson.fromJson(messageBodyRequest, BodyRequest.class);
+			QueryResult queryResult = influxDB.query(new Query("SHOW MEASUREMENTS ON " + parsedMessageBodyRequest.getDb(), ""));	
+			
+			if (queryResult.getResults().get(0).getSeries() != null) {
+				int size = queryResult.getResults().get(0).getSeries().get(0).getValues().size();
+				List<List<Object>> databases = queryResult.getResults().get(0).getSeries().get(0).getValues();		
+				
+				for (int i=0; i<size; i++) {
+					jsonArray.put(databases.get(i).get(0));
+				}						
+				
+				jsonObject.put("tables", jsonArray);
+			}
+			
+			
+		}catch(InfluxDBIOException ex) {
+			LOGGER.error(ex.getMessage());
+			throw new ConnectException(ex.getMessage());	
+		}catch(Exception ex) {
+			LOGGER.error(ex.getMessage());
+			throw new Exception(ex.getMessage());
+		}finally {
+			influxDB.close();
+		}
+		
+		return jsonObject.toString();
+	}
 }

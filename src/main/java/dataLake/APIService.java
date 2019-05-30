@@ -15,4 +15,8 @@ public interface APIService {
 
     public void updateMeasurement(String messageBodyRequest, String url) throws Exception;
     
+    public String showDatabases(String url) throws Exception;
+    
+    public String showTables(String messageBodyRequest, String url) throws Exception;
+    
 }

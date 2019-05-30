@@ -44,8 +44,9 @@ public class IDSAPI {
 			}catch(Exception ex) {
 				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
-			}			
-			return new Gson().toJson(new StandardResponse("The data base was created successfully."));	
+			}		
+			res.header("Content-Type", "application/json;charset=UTF-8");
+			return new Gson().toJson(new StandardResponse("The database was created successfully."));	
 		});		
 		
 		post("/independentStorage/deleteDB", (req, res) -> {	
@@ -66,7 +67,8 @@ public class IDSAPI {
 				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
-			return new Gson().toJson(new StandardResponse("The InfluxDB database was deleted successfully."));
+			res.header("Content-Type", "application/json;charset=UTF-8");
+			return new Gson().toJson(new StandardResponse("The database was deleted successfully."));
 		});
 		
 		post("/independentStorage/insert", (req, res) -> {	
@@ -87,6 +89,7 @@ public class IDSAPI {
 				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
 			return new Gson().toJson(new StandardResponse("Data inserted successfully."));
 		});
 		
@@ -109,6 +112,7 @@ public class IDSAPI {
 				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
 			return measurementListString;
 		});		
 		
@@ -131,6 +135,7 @@ public class IDSAPI {
 				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
 			return measurementListString;
 		});		
 		
@@ -152,6 +157,7 @@ public class IDSAPI {
 				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
 			return new Gson().toJson(new StandardResponse("Success"));
 		});
 		
@@ -173,7 +179,42 @@ public class IDSAPI {
 				res.status(500);
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
 			return new Gson().toJson(new StandardResponse("Success"));
+		});		
+		
+		post("/independentStorage/databases", (req, res) -> {		
+			LOGGER.info("list databases selected");
+			APIServiceImpl apiImpl = new APIServiceImpl(); 
+			String databases;
+			try {
+				databases = apiImpl.showDatabases(url);	
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(Exception ex) {
+				res.status(500);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
+			return databases;
+		});		
+		
+		post("/independentStorage/tables", (req, res) -> {		
+			LOGGER.info("list tables selected");
+			APIServiceImpl apiImpl = new APIServiceImpl(); 
+			String databases;
+			try {
+				databases = apiImpl.showTables(req.body(), url);	
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(Exception ex) {
+				res.status(500);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
+			return databases;
 		});		
 				
 	}

@@ -17,7 +17,7 @@ public class IoTMeasurement {
 	@Expose
     private String device;
 	@Column(name = "observation")
-	@Expose	(deserialize = false)	
+	@Expose	(deserialize = false)		
     private String observation;		
     
 	public IoTMeasurement() {
