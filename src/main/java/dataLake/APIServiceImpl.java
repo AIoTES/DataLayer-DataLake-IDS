@@ -111,14 +111,14 @@ public class APIServiceImpl implements APIService{
 
 			Point point = Point
 			        .measurement(parsedMessageBodyRequest.getTable())
-			        .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)	
-			        .addField("platformId", measurement.getPlatformId())
-			        .addField("device", measurement.getDevice())
-			        .addField("observation", observation)			
+			        .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)				        
+			        .tag("platformId", measurement.getPlatformId())	//.tag
+			        .tag("device", measurement.getDevice())	//.tag
+			        .addField("observation", observation)				        
 			        .build();
 			
 			influxDB.setDatabase(parsedMessageBodyRequest.getDb());
-			influxDB.write(point);	
+			influxDB.write(point);		
 		}catch(InfluxDBIOException ex) {
 			LOGGER.error(ex.getMessage());
 			throw new ConnectException(ex.getMessage());	
@@ -137,8 +137,7 @@ public class APIServiceImpl implements APIService{
 	}
 	
 	public String selectMeasurement(String messageBodyRequest, String url) throws Exception{
-		Gson gson = new Gson();	
-		
+		Gson gson = new Gson();			
 		BodyRequest parsedMessageBodyRequest;	
 		QueryResult queryResult;
 		String measurementListString = null;
@@ -298,14 +297,22 @@ public class APIServiceImpl implements APIService{
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));
 			measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);				
 			
+			//when tags added, the measurements should been deleted "manually"
+			String deleteQuery = parsedMessageBodyRequest.getQuery().replaceFirst("select", "DELETE").replaceFirst("SELECT", "DELETE").replaceFirst("\\*", "");				
+			
+			Query queryDeleteResult = QueryBuilder.newQuery(deleteQuery)
+			        .forDatabase(parsedMessageBodyRequest.getDb())
+			        .create();			
+			influxDB.query(queryDeleteResult);		
+			
 			for (IoTMeasurement measurement : measurementList) { 	
-				DateTime time = new DateTime(measurement.getTime());
+				DateTime time = new DateTime(measurement.getTime());		
 				
 				Point point = Point
 				        .measurement(parsedMessageBodyRequest.getTable())	
 				        .time(time.getMillis(), TimeUnit.MILLISECONDS)	
-				        .addField("platformId", (dataToUpdate.getPlatformId() != null) ? dataToUpdate.getPlatformId() : measurement.getPlatformId())
-				        .addField("device", (dataToUpdate.getDevice() != null) ? dataToUpdate.getDevice() : measurement.getDevice())
+				        .tag("platformId", (dataToUpdate.getPlatformId() != null) ? dataToUpdate.getPlatformId() : measurement.getPlatformId())
+				        .tag("device", (dataToUpdate.getDevice() != null) ? dataToUpdate.getDevice() : measurement.getDevice())
 				        .addField("observation", (observation != null) ? observation : measurement.getObservation())	
 				.build();    	
 				influxDB.setDatabase(parsedMessageBodyRequest.getDb());

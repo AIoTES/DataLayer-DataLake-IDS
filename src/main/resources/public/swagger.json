@@ -105,6 +105,71 @@
         }
       }
     },
+    "/independentStorage/databases": {
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "List databases",
+        "description": "",
+        "operationId": "databases",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/independentStorage/tables": {
+      "post": {
+        "tags": [
+          "Independent Data Storage"
+        ],
+        "summary": "List tables",
+        "description": "",
+        "operationId": "tables",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Db"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "404": {
+            "description": "Database not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/independentStorage/insert": {
       "post": {
         "tags": [

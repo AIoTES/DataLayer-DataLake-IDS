@@ -26,6 +26,7 @@ public class IDSAPI {
 		url = "http://" + localhost + ":" + port;
 		
 		externalStaticFileLocation("src/main/resources/public");
+		get("/swagger",(req, res) -> {res.redirect("index.html"); return null;});
 		
 		post("/independentStorage/createDB", (req, res) -> {	
 			LOGGER.info("createDB query selected");			
