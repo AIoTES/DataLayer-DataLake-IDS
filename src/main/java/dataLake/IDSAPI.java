@@ -47,6 +47,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}		
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return new Gson().toJson(new StandardResponse("The database was created successfully."));	
 		});		
 		
@@ -69,6 +72,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return new Gson().toJson(new StandardResponse("The database was deleted successfully."));
 		});
 		
@@ -91,6 +97,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return new Gson().toJson(new StandardResponse("Data inserted successfully."));
 		});
 		
@@ -114,6 +123,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return measurementListString;
 		});		
 		
@@ -137,6 +149,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return measurementListString;
 		});		
 		
@@ -159,6 +174,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return new Gson().toJson(new StandardResponse("Success"));
 		});
 		
@@ -181,6 +199,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return new Gson().toJson(new StandardResponse("Success"));
 		});		
 		
@@ -198,6 +219,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return databases;
 		});		
 		
@@ -215,6 +239,9 @@ public class IDSAPI {
 				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
 			}
 			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return databases;
 		});		
 				

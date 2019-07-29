@@ -297,7 +297,6 @@ public class APIServiceImpl implements APIService{
 			queryResult = influxDB.query(new Query(parsedMessageBodyRequest.getQuery(), parsedMessageBodyRequest.getDb()));
 			measurementList = resultMapper.toPOJO(queryResult, IoTMeasurement.class);				
 			
-			//when tags added, the measurements should been deleted "manually"
 			String deleteQuery = parsedMessageBodyRequest.getQuery().replaceFirst("select", "DELETE").replaceFirst("SELECT", "DELETE").replaceFirst("\\*", "");				
 			
 			Query queryDeleteResult = QueryBuilder.newQuery(deleteQuery)
