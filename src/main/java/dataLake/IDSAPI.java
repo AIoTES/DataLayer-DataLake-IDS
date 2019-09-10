@@ -3,6 +3,8 @@ package dataLake;
 import static spark.Spark.externalStaticFileLocation;
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.Spark.delete;
+import static spark.Spark.options;
 
 import java.net.ConnectException;
 
@@ -53,6 +55,15 @@ public class IDSAPI {
 			return new Gson().toJson(new StandardResponse("The database was created successfully."));	
 		});		
 		
+		options("/independentStorage/createDB", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
+		
 		post("/independentStorage/deleteDB", (req, res) -> {	
 			LOGGER.info("deleteDB query selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
@@ -78,6 +89,40 @@ public class IDSAPI {
 			return new Gson().toJson(new StandardResponse("The database was deleted successfully."));
 		});
 		
+		delete("/independentStorage/deleteDB", (req, res) -> {	
+			LOGGER.info("deleteDB query selected");
+			APIServiceImpl apiImpl = new APIServiceImpl(); 
+			try {
+				apiImpl.deleteDB(req.body(), url);
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
+			}catch(Exception ex) {
+				res.status(500);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+			return new Gson().toJson(new StandardResponse("The database was deleted successfully."));
+		});
+		
+		options("/independentStorage/deleteDB", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST, DELETE");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, DELETE, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
+		
 		post("/independentStorage/insert", (req, res) -> {	
 			LOGGER.info("insert measurement query selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
@@ -102,6 +147,15 @@ public class IDSAPI {
 			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return new Gson().toJson(new StandardResponse("Data inserted successfully."));
 		});
+		
+		options("/independentStorage/insert", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
 		
 		post("/independentStorage/select", (req, res) -> {	 
 			LOGGER.info("select measurement query selected");
@@ -155,6 +209,15 @@ public class IDSAPI {
 			return measurementListString;
 		});		
 		
+		options("/independentStorage/select", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST, GET");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, GET, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
+		
 		post("/independentStorage/delete", (req, res) -> {																
 			LOGGER.info("delete measurement query selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
@@ -179,6 +242,40 @@ public class IDSAPI {
 			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return new Gson().toJson(new StandardResponse("Success"));
 		});
+		
+		delete("/independentStorage/delete", (req, res) -> {																
+			LOGGER.info("delete measurement query selected");
+			APIServiceImpl apiImpl = new APIServiceImpl(); 
+			try {
+				apiImpl.deleteMeasurement(req.body(), url);
+			}catch(ConnectException ex) {
+				res.status(404);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "InfluxDB database not found"));
+			}catch(IllegalArgumentException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}catch(JsonSyntaxException ex) {
+				res.status(400);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, "Malformed JSON element"));
+			}catch(Exception ex) {
+				res.status(500);
+				return new Gson().toJson(new StandardResponse(StatusResponse.ERROR, ex.getMessage()));
+			}
+			res.header("Content-Type", "application/json;charset=UTF-8");
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "POST");
+			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+			return new Gson().toJson(new StandardResponse("Success"));
+		});
+		
+		options("/independentStorage/delete", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST, DELETE");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, DELETE, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
 		
 		post("/independentStorage/update", (req, res) -> {		
 			LOGGER.info("update measurement query selected");
@@ -205,6 +302,15 @@ public class IDSAPI {
 			return new Gson().toJson(new StandardResponse("Success"));
 		});		
 		
+		options("/independentStorage/update", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
+		
 		post("/independentStorage/databases", (req, res) -> {		
 			LOGGER.info("list databases selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
@@ -225,6 +331,15 @@ public class IDSAPI {
 			return databases;
 		});		
 		
+		options("/independentStorage/databases", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
+		
 		post("/independentStorage/tables", (req, res) -> {		
 			LOGGER.info("list tables selected");
 			APIServiceImpl apiImpl = new APIServiceImpl(); 
@@ -244,7 +359,16 @@ public class IDSAPI {
 			res.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
 			return databases;
 		});		
-				
+		
+		options("/independentStorage/tables", (request, response) -> {   
+    		response.header("Access-Control-Allow-Origin", "*");
+    		response.header("Access-Control-Allow-Methods", "POST");
+    		response.header("Access-Control-Allow-Headers", "Origin, Content-Type, Authorization, Accept");
+    		response.header("Allow", "POST, OPTIONS");
+    		response.status(200);
+    		return "";
+        });
+					
 	}
 
 }

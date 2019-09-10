@@ -7,7 +7,7 @@ services:
         volumes:
         - "influxdb_data:/var/lib/influxdb"
     datalake:
-        image: docker-activage.satrd.es/independentdatastorage:0.6
+        image: docker-activage.satrd.es/independentdatastorage:0.7
         ports:
         - "4567:4567"
         environment:
