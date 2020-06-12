@@ -4,7 +4,6 @@ import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.influxdb.BatchOptions;
@@ -18,9 +17,6 @@ import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 import org.influxdb.impl.InfluxDBResultMapper;
 import org.joda.time.DateTime;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -94,8 +90,7 @@ public class APIServiceImpl implements APIService{
                 .setPrettyPrinting()
                 .serializeNulls()	
                 .create();
-		BodyRequest parsedMessageBodyRequest;	
-		JSONObject jsonObj;
+		BodyRequest parsedMessageBodyRequest;		
 		
 		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
 		influxDB.enableBatch(BatchOptions.DEFAULTS);
@@ -106,15 +101,13 @@ public class APIServiceImpl implements APIService{
 			CheckFields.CheckInsertMeasurementRequest(parsedMessageBodyRequest);
 			IoTMeasurement measurement = parsedMessageBodyRequest.getData();
 			
-			jsonObj = new JSONObject(messageBodyRequest);			
-			String observation = jsonObj.getJSONObject("data").getJSONObject("observation").toString();			
-
+			CheckFields.CheckInsertMeasurementRequest(parsedMessageBodyRequest);
 			Point point = Point
 			        .measurement(parsedMessageBodyRequest.getTable())
 			        .time(System.currentTimeMillis(), TimeUnit.MILLISECONDS)				        
-			        .tag("platformId", measurement.getPlatformId())	//.tag
-			        .tag("device", measurement.getDevice())	//.tag
-			        .addField("observation", observation)				        
+			        .addField("platformId", measurement.getPlatformId())	//.tag
+			        .addField("device", measurement.getDevice())	//.tag
+			        .addField("observation", Utils.getObservation(messageBodyRequest))				        
 			        .build();
 			
 			influxDB.setDatabase(parsedMessageBodyRequest.getDb());
@@ -273,7 +266,7 @@ public class APIServiceImpl implements APIService{
                 .setPrettyPrinting()
                 .serializeNulls()	
                 .create();
-		JSONObject jsonObjObservation;
+		//JSONObject jsonObjObservation;
 		InfluxDBResultMapper resultMapper = new InfluxDBResultMapper();
 		List<IoTMeasurement> measurementList;
 		
@@ -287,9 +280,12 @@ public class APIServiceImpl implements APIService{
 			
 			IoTMeasurement dataToUpdate = parsedMessageBodyRequest.getData();
 			
-			jsonObjObservation = new JSONObject(messageBodyRequest);			
-			if (jsonObjObservation.getJSONObject("data").toString().contains("\"observation\":")) {
-				observation = jsonObjObservation.getJSONObject("data").getJSONObject("observation").toString();	
+			//jsonObjObservation = new JSONObject(messageBodyRequest);	
+			
+			//if (jsonObjObservation.getJSONObject("data").toString().contains("\"observation\":")) {
+			if (Utils.getData(messageBodyRequest).contains("\"observation\":")) {
+				//observation = jsonObjObservation.getJSONObject("data").getJSONObject("observation").toString();	
+				observation = Utils.getObservation(messageBodyRequest);
 			}					
 					
 			DynamicMeasurement altered = new DynamicMeasurement(parsedMessageBodyRequest.getTable());	
@@ -310,8 +306,8 @@ public class APIServiceImpl implements APIService{
 				Point point = Point
 				        .measurement(parsedMessageBodyRequest.getTable())	
 				        .time(time.getMillis(), TimeUnit.MILLISECONDS)	
-				        .tag("platformId", (dataToUpdate.getPlatformId() != null) ? dataToUpdate.getPlatformId() : measurement.getPlatformId())
-				        .tag("device", (dataToUpdate.getDevice() != null) ? dataToUpdate.getDevice() : measurement.getDevice())
+				        .addField("platformId", (dataToUpdate.getPlatformId() != null) ? dataToUpdate.getPlatformId() : measurement.getPlatformId())   //.tag
+				        .addField("device", (dataToUpdate.getDevice() != null) ? dataToUpdate.getDevice() : measurement.getDevice())  //.tag
 				        .addField("observation", (observation != null) ? observation : measurement.getObservation())	
 				.build();    	
 				influxDB.setDatabase(parsedMessageBodyRequest.getDb());
@@ -335,9 +331,9 @@ public class APIServiceImpl implements APIService{
 			}		
 	}		
 	
-	public String showDatabases(String url) throws Exception {	
-		JSONObject jsonObject = new JSONObject();
-		JSONArray jsonArray = new JSONArray();
+	public String showDatabases(String url) throws Exception {		
+		List<String> databasesList = new ArrayList<String>();
+		String databases = "";
 		
 		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
 		influxDB.enableBatch(BatchOptions.DEFAULTS);		
@@ -348,13 +344,14 @@ public class APIServiceImpl implements APIService{
 
 			if (queryResult.getResults().get(0).getSeries() != null) {
 				int size = queryResult.getResults().get(0).getSeries().get(0).getValues().size();
-				List<List<Object>> databases = queryResult.getResults().get(0).getSeries().get(0).getValues();		
+				List<List<Object>> databasesListofLists = queryResult.getResults().get(0).getSeries().get(0).getValues();		
 				
 				for (int i=0; i<size; i++) {
-					jsonArray.put(databases.get(i).get(0));
+					databasesList.add(databasesListofLists.get(i).get(0).toString());
 				}			
 				
-				jsonObject.put("databases", jsonArray);
+				Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
+				databases = gson2.toJson(databasesList);
 			}
 			
 		}catch(InfluxDBIOException ex) {
@@ -367,14 +364,14 @@ public class APIServiceImpl implements APIService{
 			influxDB.close();
 		}
 		
-		return jsonObject.toString();
+		return databases;
 	}
 	
 	public String showTables(String messageBodyRequest, String url) throws Exception {
 		Gson gson = new Gson();
 		BodyRequest parsedMessageBodyRequest;
-		JSONObject jsonObject = new JSONObject();
-		JSONArray jsonArray = new JSONArray();
+		List<String> tablesList = new ArrayList<String>();
+		String tables = "";
 		
 		InfluxDB influxDB = InfluxDBFactory.connect(url, "root", "root");	
 		influxDB.enableBatch(BatchOptions.DEFAULTS);		
@@ -386,13 +383,14 @@ public class APIServiceImpl implements APIService{
 			
 			if (queryResult.getResults().get(0).getSeries() != null) {
 				int size = queryResult.getResults().get(0).getSeries().get(0).getValues().size();
-				List<List<Object>> databases = queryResult.getResults().get(0).getSeries().get(0).getValues();		
+				List<List<Object>> tablesListofLists = queryResult.getResults().get(0).getSeries().get(0).getValues();		
 				
 				for (int i=0; i<size; i++) {
-					jsonArray.put(databases.get(i).get(0));
+					tablesList.add(tablesListofLists.get(i).get(0).toString());
 				}						
 				
-				jsonObject.put("tables", jsonArray);
+				Gson gson2 = new GsonBuilder().setPrettyPrinting().create();	
+				tables = gson2.toJson(tablesList);
 			}
 			
 			
@@ -406,6 +404,7 @@ public class APIServiceImpl implements APIService{
 			influxDB.close();
 		}
 		
-		return jsonObject.toString();
+		//return jsonObject.toString();
+		return tables;	
 	}
 }
