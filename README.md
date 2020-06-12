@@ -21,6 +21,7 @@ First, clone this repository:
 In case you want to change the configuration, performd the appropiate changes in the docker-compose.yml file.
 
 Next, build the docker image following these steps:
+
 1) Open a terminal
 
 2) Run `docker --version` to ensure that you have a supported version of Docker
