@@ -1,0 +1,43 @@
+ACTIVAGE Internet of Things (IoT) for ageing well www.activageproject.eu
+Independent Data Storage
+
+This project has received funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement No 732679.
+
+Copyright 2020 Universitat Politècnica de València
+
+
+I. Used Software
+
+This product uses the following software with corresponding licenses:
+
+
+Gson (com.google.code.gson:gson:2.8.0 - https://github.com/google/gson/gson) distributed under Apache License, Version 2.0
+Spark (com.sparkjava:spark-core:2.7.2 - http://www.sparkjava.com) distributed under Apache License, Version 2.0
+Moshi (com.squareup.moshi:moshi:1.5.0 - https://github.com/square/moshi/moshi) distributed under Apache License, Version 2.0
+OkHttp Logging Interceptor (com.squareup.okhttp3:logging-interceptor:3.11.0 - https://github.com/square/okhttp/logging-interceptor) distributed under Apache License, Version 2.0
+OkHttp (com.squareup.okhttp3:okhttp:3.11.0 - https://github.com/square/okhttp/okhttp) distributed under Apache License, Version 2.0
+Okio (com.squareup.okio:okio:1.14.0 - https://github.com/square/okio/okio) distributed under Apache License, Version 2.0
+Converter: Moshi (com.squareup.retrofit2:converter-moshi:2.4.0 - https://github.com/square/retrofit/retrofit-converters/converter-moshi/) distributed under Apache License, Version 2.0
+Retrofit (com.squareup.retrofit2:retrofit:2.4.0 - https://github.com/square/retrofit/retrofit/) distributed under Apache License, Version 2.0
+javax.annotation API (javax.annotation:javax.annotation-api:1.2 - http://jcp.org/en/jsr/detail?id=250) distributed under CDDL + GPLv2 with classpath exception
+Java Servlet API (javax.servlet:javax.servlet-api:3.1.0 - http://servlet-spec.java.net) distributed under CDDL + GPLv2 with classpath exception
+Joda-Time (joda-time:joda-time:2.10 - http://www.joda.org/joda-time/) distributed under Apache License, Version 2.0
+Apache Log4j API (org.apache.logging.log4j:log4j-api:2.11.1 - https://logging.apache.org/log4j/2.x/log4j-api/) distributed under Apache License, Version 2.0
+Apache Log4j Core (org.apache.logging.log4j:log4j-core:2.11.1 - https://logging.apache.org/log4j/2.x/log4j-core/) distributed under Apache License, Version 2.0
+Jetty :: Asynchronous HTTP Client (org.eclipse.jetty:jetty-client:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Http Utility (org.eclipse.jetty:jetty-http:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: IO Utility (org.eclipse.jetty:jetty-io:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Security (org.eclipse.jetty:jetty-security:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Server Core (org.eclipse.jetty:jetty-server:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Servlet Handling (org.eclipse.jetty:jetty-servlet:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Utilities (org.eclipse.jetty:jetty-util:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Webapp Application Support (org.eclipse.jetty:jetty-webapp:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: XML utilities (org.eclipse.jetty:jetty-xml:9.4.8.v20171121 - http://www.eclipse.org/jetty) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Websocket :: API (org.eclipse.jetty.websocket:websocket-api:9.4.8.v20171121 - http://www.eclipse.org/jetty/websocket-api) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Websocket :: Client (org.eclipse.jetty.websocket:websocket-client:9.4.8.v20171121 - http://www.eclipse.org/jetty/websocket-client) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Websocket :: Common (org.eclipse.jetty.websocket:websocket-common:9.4.8.v20171121 - http://www.eclipse.org/jetty/websocket-common) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Websocket :: Server (org.eclipse.jetty.websocket:websocket-server:9.4.8.v20171121 - http://www.eclipse.org/jetty/websocket-server) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+Jetty :: Websocket :: Servlet Interface (org.eclipse.jetty.websocket:websocket-servlet:9.4.8.v20171121 - http://www.eclipse.org/jetty/websocket-servlet) distributed under Apache License, Version 2.0 or Eclipse Public License - Version 1.0
+influxdb java bindings (org.influxdb:influxdb-java:2.14 - http://www.influxdb.org) distributed under MIT License
+msgpack-core (org.msgpack:msgpack-core:0.8.16 - http://msgpack.org/) distributed under Apache License, Version 2.0
+SLF4J API Module (org.slf4j:slf4j-api:1.7.13 - http://www.slf4j.org) distributed under MIT License
