@@ -1,9 +1,8 @@
 # DL-Independent_data_storage
 
-## Summary
 The data collected from the various IoT platforms, are stored in a distributed manner, where the data of each platform and deployment site are stored to its own database, while for those platforms that do not provide data storage services, the ACTIVAGE independent data storage is used. This ensures that all data are stored in online databases, following the relevant requirements of the DSs. Here are the services provided by the Independent Data Storage component
 
-## Config & use
+## Getting stated 
 The Independent Data Storage docker image is pre-configured to be deployed on your machine in the port number 4567. This image also includes the deployment of a InfluxDB data stoge in the port 8086. 
 You can change the configuration of the ports in the file docker-compose.yml (placed in the root folder of this repository) by changing the port attribute in the corresponding service.
 
@@ -33,3 +32,7 @@ Next, build the docker image following these steps:
 5) Run `docker build -t independentdatastorage:<version_number> . `
 
 6) Run `docker-compose up`
+
+
+## License
+The Independent Data Storage is licensed under [Apache 2.0 license] (https://www.apache.org/licenses/LICENSE-2.0).
