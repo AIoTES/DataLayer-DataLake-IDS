@@ -18,12 +18,18 @@ First, clone this repository:
 
 `git clone https://git.activageproject.eu/Data_Analytics/DL-Independent_data_storage.git`
 
-In case you want to change the configuration, performd the appropiate changes in the docker-compose.yml file.
+In case you want to change the configuration, perform the appropiate changes in the docker-compose.yml file.
 
 Next, build the docker image following these steps:
+
 1) Open a terminal
+
 2) Run `docker --version` to ensure that you have a supported version of Docker
+
 3) Run `docker-compose --version` to ensure that you have a supported version of Docker Compose
+
 4) Go to the root folder of this repository (where the file docker-compose.yml is located)
+
 5) Run `docker build -t independentdatastorage:<version_number> . `
+
 6) Run `docker-compose up`
