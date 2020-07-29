@@ -29,9 +29,7 @@ Next, build the docker image following these steps:
 
 4) Go to the root folder of this repository (where the file docker-compose.yml is located)
 
-5) Run `docker build -t independentdatastorage:<version_number> . `
-
-6) Run `docker-compose up`
+5) Run `docker-compose up`
 
 
 ## License
