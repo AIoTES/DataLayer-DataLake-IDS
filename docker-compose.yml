@@ -7,7 +7,7 @@ services:
         volumes:
         - "influxdb_data:/var/lib/influxdb"
     datalake:
-        image: docker-activage.satrd.es/independentdatastorage:0.8
+        image: aiotesdocker/datalayer-datalake-ids
         ports:
         - "4567:4567"
         environment:
